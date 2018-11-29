@@ -11,4 +11,8 @@ RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
+
+  Dir[File.dirname(__FILE__) + '/contexts/*.rb'].each do |file| 
+    require file
+  end
 end
