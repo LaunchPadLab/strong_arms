@@ -58,6 +58,8 @@ end
 # app/strong_arms
 
 class PostStrongArm
+  extend StrongArms
+
   ignore :created_at, :updated_at
 
   permit :id
@@ -69,6 +71,8 @@ class PostStrongArm
 end
 
 class CommentStrongArm
+  extend StrongArms
+
   ignore :created_at, :updated_at
 
   permit :id
@@ -85,6 +89,8 @@ If parameters are passed to Strong Arms without being permitted, Strong Arms wil
 
 ```ruby
 class UserStrongArm
+  extend StrongArms
+
   permit :id
 end
 ```
@@ -99,6 +105,8 @@ If it is absent, Strong Arms will raise an exception.
 
 ```ruby
 class UserStrongArm
+  extend StrongArms
+
   permit :id
   permit :email, required: true
 end
@@ -112,6 +120,8 @@ Commonly ignored parameters include auto incremented or optional (nillable) valu
 
 ```ruby
 class UserStrongArm
+  extend StrongArms
+
   ignore :created_at, :updated_at
 
   permit :id
@@ -127,6 +137,8 @@ This is similar to how Rails handles association declarations with `has_many` an
 
 ```ruby
 class UserStrongArm
+  extend StrongArms
+
   ignore :created_at, :updated_at
 
   permit :id
@@ -137,6 +149,8 @@ class UserStrongArm
 end
 
 class PostStrongArm
+  extend StrongArms
+
   ignore :created_at, :updated_at
 
   permit :id
@@ -145,6 +159,8 @@ class PostStrongArm
 end
 
 class ProfileStrongArm
+  extend StrongArms
+
   ignore :created_at, :updated_at
 
   permit :id
