@@ -26,14 +26,26 @@ module Utilities
     end
   end
 
-  def model_name_from_attributes_key(name)
-    name.to_s.gsub('s_attributes', '').camelize
+  def find_strong_arm(attributes_key, options)
+    model_alias = options[:model]
+    model_name =
+      model_name_from_attributes_key(attributes_key, model_alias: model_alias)
+    strong_arm = "#{model_name}StrongArm"
+    strong_arm.constantize
   end
 
-  def find_strong_arm(nested_attributes_key)
-    model_name = model_name_from_attributes_key(nested_attributes_key)
-    strong_arm = model_name + "StrongArm"
-    strong_arm.constantize
+  def handlers_values
+    handlers.values
+  end
+
+  private
+
+  def model_name_from_attributes_key(name, model_alias: nil)
+    if model_alias
+      model_alias.to_s.camelize
+    else
+      name.to_s.gsub('s_attributes', '').camelize
+    end
   end
 
   def unhandled_keys(args)
@@ -45,9 +57,6 @@ module Utilities
     handlers.keys.flatten.uniq
   end
 
-  def handlers_values
-    handlers.values
-  end
 
   def symbolized_keys_array(args)
     args.keys.map(&:to_sym)

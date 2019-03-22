@@ -1,27 +1,23 @@
 require "strong_arms/version"
 require "strong_arms/utilities"
-require "strong_arms/errors"
 require "strong_arms/exception_methods"
 require "strong_arms/assertions"
 require "active_support/all"
 
 module StrongArms
   include Utilities
-  include Errors
   include ExceptionMethods
   include Assertions
   include ActiveSupport
 
-  def handlers
-    @handlers ||= {}
+  class UnhandledKeys < StandardError
+    def initialize(msg)
+      super
+    end
   end
 
   def ignore(*args)
     @keys_to_ignore = args
-  end
-
-  def keys_to_ignore
-    @keys_to_ignore ||= []
   end
 
   def permit(attribute, **options)
@@ -34,19 +30,29 @@ module StrongArms
     set_handler(attribute, options, type: :input)
   end
 
-  def one_nested(association, format: true)
+  def one_nested(association, options = {})
+    format = options.fetch(:format, true)
+    model = options[:model]
+    merged_handler_options = { has_many: false }.merge(model: model)
+    handler_options = model ? merged_handler_options : { has_many: false }
     modified_key = format ? nested_attributes_key(association) : association
-    set_handler(modified_key, { has_many: false }, type: :association)
+
+    set_handler(modified_key, handler_options, type: :association)
   end
 
-  def many_nested(association, format: true)
+  def many_nested(association, options = {})
+    format = options.fetch(:format, true)
+    model = options[:model]
+    merged_handler_options = { has_many: true }.merge(model: model)
+    handler_options = model ? merged_handler_options : { has_many: true }
     modified_key = format ? nested_attributes_key(association) : association
-    set_handler(modified_key, { has_many: true }, type: :association)
+
+    set_handler(modified_key, handler_options, type: :association)
   end
 
   def flex(args)
-    _args = action_controller_args?(args) ? accessible_hash(args) : args
-    exposed_args = expose_data_key_if_present(_args)
+    useful_args = action_controller_args?(args) ? accessible_hash(args) : args
+    exposed_args = expose_data_key_if_present(useful_args)
 
     raise empty_arguments_exception if exposed_args.blank?
     if unhandled_keys_present?(exposed_args)
@@ -54,6 +60,14 @@ module StrongArms
     end
 
     reduce_handlers(handlers_values, exposed_args)
+  end
+
+  def handlers
+    @handlers ||= {}
+  end
+
+  def keys_to_ignore
+    @keys_to_ignore ||= []
   end
 
   def nested_attributes_key(association)
@@ -90,12 +104,12 @@ module StrongArms
     send("parse_#{type}", name: name, value: value_at_name, options: options)
   end
 
-  def parse_input(name:, value:, options:) # options goes unused
+  def parse_input(name:, value:, options:)
     { name => value }
   end
 
   def parse_association(name:, value:, options:)
-    strong_arm = find_strong_arm(name)
+    strong_arm = find_strong_arm(name, options)
     wrapped_values = [value].flatten
     has_many = options[:has_many]
 
