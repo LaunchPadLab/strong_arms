@@ -39,6 +39,16 @@ RSpec.shared_context 'user strong arm' do
       permit :_destroy
     end
 
+    class FocusStrongArm
+      extend StrongArms
+
+      ignore :created_at, :updated_at
+
+      permit :id
+      permit :text, required: true
+      permit :_destroy
+    end
+
     class TagStrongArm
       extend StrongArms
 

@@ -6,7 +6,7 @@ module ExceptionMethods
 
   def unhandled_keys_exception(args)
     keys = unhandled_keys(args)
-    Errors::UnhandledKeys.
+    StrongArms::UnhandledKeys.
       new("#{name} received unhandled keys: #{keys.join(', ')}.")
   end
 

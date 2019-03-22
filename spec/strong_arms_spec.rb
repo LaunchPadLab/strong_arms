@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'pry'
 
 RSpec.describe StrongArms do
   include_context 'user strong arm'
@@ -176,7 +177,7 @@ RSpec.describe StrongArms do
     expect(StrongArms::VERSION).not_to be nil
   end
 
-  describe '.flex' do
+  describe '#flex' do
     context 'when a non empty hash is passed' do
       it 'returns a hash of flexed permit & association values' do
         result = strong_arm.flex(params)
@@ -196,7 +197,7 @@ RSpec.describe StrongArms do
     context 'when unhandled keys are supplied' do
       it 'raises UnhandledKeys with a message' do
         expect { strong_arm.flex(unexpected_params) }.
-          to raise_exception(Errors::UnhandledKeys,
+          to raise_exception(StrongArms::UnhandledKeys,
             'UserStrongArm received unhandled keys: income.')
       end
     end
@@ -209,7 +210,7 @@ RSpec.describe StrongArms do
     end
   end
 
-  describe '.reduce_handlers' do
+  describe '#reduce_handlers' do
     context 'when handlers are present' do
       it 'returns a reduced hash of parsed input values' do
         result = strong_arm.reduce_handlers(handlers, params)
@@ -225,7 +226,17 @@ RSpec.describe StrongArms do
     end
   end
 
-  describe '.extract_handler_values_and_parse' do
+  describe '#find_strong_arm' do
+    context 'when a model alias is passed' do
+      it 'returns the aliased strong arm' do
+        model_alias_options = { model: :focus }
+        result = strong_arm.find_strong_arm(:comments, model_alias_options)
+        expect(result).to eq FocusStrongArm
+      end
+    end
+  end
+
+  describe '#extract_handler_values_and_parse' do
     context 'when public boolean value is false' do
       it 'returns a parsed public boolean hash' do
         result = strong_arm.
@@ -247,7 +258,7 @@ RSpec.describe StrongArms do
     end
   end
 
-  describe '.handlers_values' do
+  describe '#handlers_values' do
     context 'when params are defined' do
       it 'returns a array of input handlers' do
         result = strong_arm.handlers_values
@@ -256,11 +267,11 @@ RSpec.describe StrongArms do
     end
   end
 
-  describe '.unhandled_keys' do
+  describe '#unhandled_keys' do
     context 'when unexpected params are passed' do
       it 'raises UnhandledKeys with a message' do
         expect { strong_arm.flex(unexpected_params) }.
-          to raise_exception(Errors::UnhandledKeys)
+          to raise_exception(StrongArms::UnhandledKeys)
       end
     end
   end

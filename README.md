@@ -186,7 +186,18 @@ If you do not wish to use `accepts_nested_attributes_for`, provide the `:format`
 
 If Strong Arms cannot find the relevant Strong Arms class for the nested resource, it will raise an exception.
 
+## Model Option
 
+Sometimes failure to find the relevant Strong Arm occurs due to irregular plural conjugations.
+
+You can pass the appropriate model name via the `:model` option:
+
+```ruby
+  many_nested :loaves, model: :loaf
+  one_nested :address, model: :address
+```
+
+This also comes in handy for plural words ending in `es`, or if you'd like to match the key to an alias Strong Arm.
 
 ## Development
 
