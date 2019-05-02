@@ -2,13 +2,7 @@
 
 A nested parameters friendly alternative to [strong_parameters](https://github.com/rails/strong_parameters) found in Rails.
 
-We love `strong_parameters`, but wanted a cleaner approach for handling deeply nested parameters.
-
-`permit()` is great for handling a few parameters, but becomes tough to read and prone to user error when describing a deeply nested structure.
-
-`require()` is great for ensuring top level keys are present, but does not provide a great interface for flagging specific nested parameters.
-
-Strong Arms provides an interface which makes declaring nested relationships easy, in addition to whitelisting parameters with `permit`, `require` and `ignore`.
+Strong Arms provides a simple whitelisting interface and tells you when it encounters unexpected params.
 
 ## Installation
 
@@ -131,7 +125,7 @@ end
 
 ## Nested Parameters
 
-StrongArm handles nested parameters, by specifying a relationship with `many_nested` or `one_nested` methods.
+Strong Arms handles nested parameters, by specifying a relationship with `many_nested` or `one_nested` methods.
 
 This is similar to how Rails handles association declarations with `has_many` and `has_one` methods.
 
