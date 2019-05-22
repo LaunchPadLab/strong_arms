@@ -44,7 +44,10 @@ module Utilities
     if model_alias
       model_alias.to_s.camelize
     else
-      name.to_s.gsub('s_attributes', '').camelize
+      name.to_s.
+        gsub('s_attributes', '').
+        gsub('_attributes', '').
+        camelize
     end
   end
 
