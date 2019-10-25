@@ -3,6 +3,13 @@ RSpec.shared_context 'user strong arm' do
 
   # Movie, Actor Classes and serializers
   before(:context) do
+    class RequiredBooleanStrongArm
+      extend StrongArms
+
+      permit :id
+      permit :authorized, required: true
+    end
+
     class UserStrongArm
       extend StrongArms
 

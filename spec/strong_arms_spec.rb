@@ -19,7 +19,7 @@ RSpec.describe StrongArms do
       id: 1,
       name: 'Nate',
       public: false,
-      email: required_email_value,
+      email: required_email_value
     }
   end
 
@@ -179,9 +179,23 @@ RSpec.describe StrongArms do
 
   describe '#flex' do
     context 'when a non empty hash is passed' do
-      it 'returns a hash of flexed permit & association values' do
+      it 'returns a hash of whitelisted keys & associations' do
         result = strong_arm.flex(params)
         expect(result).to eq parsed_values
+      end
+    end
+
+    context 'when required key values are falsey' do
+      let(:strong_arm) do
+        RequiredBooleanStrongArm
+      end
+
+      let(:params) do
+        { id: 1, authorized: false }
+      end
+
+      it 'does not throw a false negative when checking presence' do
+        expect{ strong_arm.flex(params) }.not_to raise_error
       end
     end
 

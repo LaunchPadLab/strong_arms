@@ -1,6 +1,7 @@
 module Assertions
   def required_input_value_missing?(options, value)
-    required_input?(options) && value.blank?
+    cast_value = value.to_s
+    required_input?(options) && cast_value.blank?
   end
 
   def required_input?(options)
