@@ -1,7 +1,9 @@
+require_relative '../lib/strong_arms/utilities'
 require 'spec_helper'
 require 'pry'
 
 RSpec.describe StrongArms do
+  include Utilities
   include_context 'user strong arm'
 
   let!(:params) do
@@ -172,12 +174,42 @@ RSpec.describe StrongArms do
   let!(:strong_arm) do
     UserStrongArm
   end
+  
+  let(:environment) { 'development' }
 
+  let(:configure_environment) do
+    StrongArms.configure do |config|
+      config.env = environment
+    end
+  end
+  
   it "has a version number" do
     expect(StrongArms::VERSION).not_to be nil
   end
+  
+  before do
+    configure_environment
+  end
+
+  describe 'configure' do
+    let(:environment) { 'production' }
+
+    it 'globally stores the value passed for env' do
+      config = StrongArms.configuration
+      expect(config.env).to eq 'production'
+    end
+  end
 
   describe '#flex' do
+    context 'when configuration is skipped' do
+      it 'raises ConfigurationMissing' do
+        StrongArms.configuration = nil
+        exception = StrongArms::ConfigurationMissing
+        message = "StrongArms must be configured to your environment, see README for getting started."
+        expect{ strong_arm.flex(params) }.to raise_exception(exception, message)
+      end
+    end
+
     context 'when a non empty hash is passed' do
       it 'returns a hash of whitelisted keys & associations' do
         result = strong_arm.flex(params)
@@ -282,11 +314,27 @@ RSpec.describe StrongArms do
   end
 
   describe '#unhandled_keys' do
-    context 'when unexpected params are passed' do
+    context 'development: when unexpected params are passed' do
       it 'raises UnhandledKeys with a message' do
         expect { strong_arm.flex(unexpected_params) }.
           to raise_exception(StrongArms::UnhandledKeys)
       end
+    end
+
+    context 'production: when unexpected params are passed' do
+      let(:environment) { 'production' }
+
+      it 'does not raise UnhandledKeys' do
+        expect { strong_arm.flex(unexpected_params) }.
+          not_to raise_error
+      end
+
+      # * Does not pass despite the fact the method does output to STDERR
+      # it 'logs errors' do
+      #   message = "Unhandled keys"
+      #   exception = StrongArms::UnhandledKeys.new(message)
+      #   expect { raise_or_log_error { exception } }.to output(message).to_stderr
+      # end
     end
   end
 end

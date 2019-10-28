@@ -1,4 +1,18 @@
+require 'logger'
+
 module Utilities
+  def raise_or_log_error
+    if StrongArms.env == StrongArms::STRICT_ENV
+      raise yield
+    else
+      error_log.error("[STRONG_ARMS]: #{yield.message}")
+    end
+  end
+
+  def error_log
+    @log ||= Logger.new(STDERR)
+  end
+
   def build_handler(name, options, type:)
     {
       name: name,

@@ -10,9 +10,32 @@ module StrongArms
   include Assertions
   include ActiveSupport
 
-  class UnhandledKeys < StandardError
-    def initialize(msg)
-      super
+  STRICT_ENV = 'development'.freeze
+
+  class UnhandledKeys < StandardError; end
+  class ConfigurationMissing < StandardError; end
+  class ValuesMissing < ArgumentError; end
+  class MultipleAttributesError < ArgumentError; end
+  class RequiredValueMissing < ArgumentError; end
+
+  class << self
+    attr_accessor :configuration
+
+    def env
+      configuration.env
+    end
+  end
+
+  def self.configure
+    self.configuration ||= Configuration.new
+    yield(configuration)
+  end
+
+  class Configuration
+    attr_accessor :env
+
+    def initialize
+      @env = STRICT_ENV
     end
   end
 
@@ -22,42 +45,37 @@ module StrongArms
 
   def permit(attribute, **options)
     attributes = [attribute].flatten
-
-    if multiple_attributes?(attributes)
-      raise multiple_attributes_exception
-    end
+    multiple_attributes_error(attributes)
 
     set_handler(attribute, options, type: :input)
   end
 
   def one_nested(association, options = {})
-    format = options.fetch(:format, true)
-    model = options[:model]
-    merged_handler_options = { has_many: false }.merge(model: model)
-    handler_options = model ? merged_handler_options : { has_many: false }
-    modified_key = format ? nested_attributes_key(association) : association
-
-    set_handler(modified_key, handler_options, type: :association)
+    nested(association: association, has_many: false, options: options)
   end
 
   def many_nested(association, options = {})
+    nested(association: association, has_many: true, options: options)
+  end
+
+  def nested(association:, has_many:, options: {})
     format = options.fetch(:format, true)
     model = options[:model]
-    merged_handler_options = { has_many: true }.merge(model: model)
-    handler_options = model ? merged_handler_options : { has_many: true }
+    merged_handler_options = { has_many: has_many }.merge(model: model)
+    handler_options = model ? merged_handler_options : { has_many: has_many }
     modified_key = format ? nested_attributes_key(association) : association
 
     set_handler(modified_key, handler_options, type: :association)
   end
 
   def flex(args)
+    environment_configured_error
+
     useful_args = action_controller_args?(args) ? accessible_hash(args) : args
     exposed_args = expose_data_key_if_present(useful_args)
 
-    raise empty_arguments_exception if exposed_args.blank?
-    if unhandled_keys_present?(exposed_args)
-      raise unhandled_keys_exception(exposed_args)
-    end
+    empty_arguments_error(exposed_args)
+    unhandled_keys_error(exposed_args)
 
     reduce_handlers(handlers_values, exposed_args)
   end
@@ -95,9 +113,7 @@ module StrongArms
     allow_nil = options[:allow_nil]
     value_at_name = args[name]
 
-    if required_input_value_missing?(options, value_at_name)
-      raise missing_value_for_required_input_exception(name)
-    end
+    missing_value_for_required_input_error(name, value_at_name, options)
 
     return {} if value_is_absent?(value_at_name, allow_nil: allow_nil)
 
